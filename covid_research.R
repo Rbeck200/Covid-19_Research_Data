@@ -45,7 +45,7 @@ exampledata<-read.csv('Example_Data.csv')
 ##Use next part to separate data into one days worth
 #####This code that I need help using to separate into one day===================================================
 
-mydata<-subset(basedata,collection_date='7/1/2020')
+mydata<-subset(basedata,collection_date=='2020-07-01')
 ######===========================================================================================================
 
 
