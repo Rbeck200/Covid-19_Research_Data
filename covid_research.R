@@ -1,7 +1,7 @@
 ###########################################################################
 #Help area for all the installations and librarys we need
 
-list.of.packages <- c("TDAmapper", "fastcluster", "igraph")
+list.of.packages <- c("TDAmapper", "fastcluster", "igraph","ggplot2")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
@@ -16,68 +16,66 @@ setwd("C:/Users/Paral/Documents/School/CURM/Covid-19_Research_Data")
 library(TDAmapper)
 require(fastcluster)
 library(igraph)
+library(ggplot2)
 
 rm(list = ls())
-
-
-
-
-
 
 ##I load all the data in from my .csv
 
 basedata<-read.csv('Covid-19 Data-Set.csv')
+popdata<-read.csv('populations.csv')
 
 
-##I want to separate the data by the date 
-##so that I can gegt one days worth of data at a time like this file
+caldata<-subset(basedata,state=='CA')
+caldata$collection_date <- as.Date(caldata$collection_date)
+attach(caldata)
 
-exampledata<-read.csv('Example_Data.csv')
+calPop <-subset(popdata, popdata$State=="CA")
+calPopValue<-calPop$Population
 
-######Use this area to loop through a .csv that has the dates from 
-########each month in a collunm to process it a month at a time.---------------------------------------------------
 
+plot(ICU.Beds.Occupied.Estimated~collection_date, data=caldata)
 
 ##SOmething like for(int i; i < month.length; i++) so that I can loo through a month at a time
 #########-=--------------------------------------------------------------------------------------------------------
 
+ggplot(data = caldata, aes(x = collection_date, y = ICU.Beds.Occupied.Estimated)) +
+  geom_point() +
+  geom_path()+
+  labs(x = "Date",
+       y = "Total ICU Bed Occupation",
+       title = "ICU Occupation - California",
+       subtitle = "7/2020 - 1/2021")
 
-##Use next part to separate data into one days worth
-#####This code that I need help using to separate into one day===================================================
-
-mydata<-subset(basedata,collection_date=='2020-07-01')
-######===========================================================================================================
-
-
-
-
-
-###calculate positivity rate
-
-posRate<-data.frame(mydata$Positive.Tests / mydata$Negative.tests)
-
-
-
+ggplot(data = caldata, aes(x = collection_date, y = ((Deaths/calPopValue)*100000))) +
+  geom_point() +
+  geom_path()+
+  labs(x = "Date",
+       y = "Deaths per 100,000 people",
+       title = "Deaths per 100,000 people - California",
+       subtitle = "7/2020 - 1/2021")
 
 
-##########This code does not work it is something that I would like a hand with++++++++++++++++++
+ICUdf<-data.frame(x=caldata[,2], y=caldata[,3])
 
-ICUdf<-merge(x=mydata[3], y=posRate[1])
+dist_mat_ICU<-as.matrix(dist(ICUdf))
+write.csv(dist_mat_ICU,'distICU.csv')
+rm(dist_mat_ICU)
   
-DEATHdf<-merge(x=mydata[12], y=posRate[1])
+DEATHdf<-data.frame(x=caldata[,2], y=((caldata[,12]/calPopValue)*100000))
 
-######+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
+dist_mat_DEATH<-as.matrix(dist(DEATHdf))
+write.csv(dist_mat_DEATH,'distDEATH.csv')
+rm(dist_mat_DEATH)
 
 
 
 m1 <- mapper1D( 
   distance_matrix = dist(ICUdf), 
-  filter_values = ICUdf[,2], #This defines the filter function to be the x value num_intervals = 10, 
+  filter_values = ICUdf[,2], 
   num_intervals = 8,
-  percent_overlap = 50, 
-  num_bins_when_clustering = 1) 
+  percent_overlap = 25, 
+  num_bins_when_clustering = 100) 
 
 g1 <- graph.adjacency(m1$adjacency, mode="undirected")
 plot(g1, layout = layout.auto(g1) ,xlab='X',ylab='Y',main='Dist - 1')
@@ -86,13 +84,13 @@ plot(g1, layout = layout.auto(g1) ,xlab='X',ylab='Y',main='Dist - 1')
 
 m2 <- mapper1D( 
   distance_matrix = dist(DEATHdf), 
-  filter_values = DEATHdf[,2], #This defines the filter function to be the x value num_intervals = 10, 
+  filter_values = DEATHdf[,2],  
   num_intervals = 8,
-  percent_overlap = 50, 
-  num_bins_when_clustering = 2) 
+  percent_overlap = 10, 
+  num_bins_when_clustering = .5) 
 
 g2 <- graph.adjacency(m2$adjacency, mode="undirected")
 plot(g2, layout = layout.auto(g2) ,xlab='X',ylab='Y',main='Dist - 2')
 
-########------------------------------------------------------------------------------------------------------
+
 
