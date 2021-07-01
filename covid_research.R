@@ -12,7 +12,7 @@ help("mapper1D")
 ##Make sure that you replace what is in the "double quotes" on the next line with the file path that you have this
 ##R-Script saved and all of the .csv files as well.
 
-setwd("C:/Users/Paral/Documents/School/CURM/Covid-19_Research_Data/Data")
+setwd("C:/Users/Paral/Documents/School/TDA Paper/Covid-19_Research_Data/Data")
 library(TDAmapper)
 require(fastcluster)
 library(igraph)
